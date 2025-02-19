@@ -1,0 +1,10 @@
+[package]
+name = "jetkit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[[bin]]
+name = "ses"
+path = "src/ses/main.rs"
