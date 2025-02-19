@@ -15,6 +15,8 @@ Arguments:
 Options:
   -q, --quiet               Do not write to standard output
   -d, --display-public-key  Display the public key instead of the Ethereum address
+  -a, --human-readable      When reading or writing private keys, interpret them as 0x-prefixed UTF-8-encoded hexadecimal strings (unless `--no-hex-prefix` is specified)
+  -b, --no-hex-prefix       When reading or writing private keys in human-readable, hexadecimal form, do not use 0x-prefixes
   -i, --in <IN>             Path to private key
   -h, --help                Print help
   -V, --version             Print version
@@ -48,5 +50,14 @@ $ ses new_private_key.secret
 $ xxd new_private_key.secret
 00000000: 2f8d 26d4 4daa cd46 0965 7816 4bb3 1c5c  /.&.M..F.ex.K..\
 00000010: 94be 11d7 4716 a84a a297 cb0b 401e 0c05  ....G..J....@...
+```
+
+#### Composition with `cast` ####
+
+This example will fail due to the freshly-created EOA having zero balance but you get the idea.
+
+```
+$ ses -qa new_private_key.secret && cast mktx --private-key $(cat private_key.secret) --flashbots --create 0x6080
+Error: server returned an error response: error code -32000: insufficient funds for transfer
 ```
 
