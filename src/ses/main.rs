@@ -67,7 +67,7 @@ fn main() -> eyre::Result<()> {
             let mut hasher = Keccak256::new();
             hasher.update(public_key_bytes);
             let digest = hasher.finalize();
-            let address_bytes = &digest[..ETHEREUM_ADDRESS_LEN];
+            let address_bytes = &digest[digest.len() - ETHEREUM_ADDRESS_LEN..];
             println!("0x{}", hex::encode(address_bytes));
         }
     }
