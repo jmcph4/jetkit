@@ -73,6 +73,7 @@ fn main() -> eyre::Result<()> {
             hasher.update(public_key_bytes);
             let digest = hasher.finalize();
             let address_bytes = &digest[digest.len() - ETHEREUM_ADDRESS_LEN..];
+            assert!(address_bytes.len() == ETHEREUM_ADDRESS_LEN);
             println!("0x{}", hex::encode(address_bytes));
         }
     }
