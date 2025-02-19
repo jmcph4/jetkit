@@ -23,6 +23,15 @@ struct Opts {
     /// Display the public key instead of the Ethereum address
     #[clap(long, short)]
     pub display_public_key: bool,
+    /// When reading or writing private keys, interpret them as 0x-prefixed
+    /// UTF-8-encoded hexadecimal strings (unless `--no-hex-prefix` is
+    /// specified)
+    #[clap(long, short = 'a')]
+    pub human_readable: bool,
+    /// When reading or writing private keys in human-readable, hexadecimal
+    /// form, do not use 0x-prefixes
+    #[clap(long, short = 'b')]
+    pub no_hex_prefix: bool,
     /// Path to private key
     #[clap(long, short)]
     pub r#in: Option<PathBuf>,
@@ -37,7 +46,15 @@ fn main() -> eyre::Result<()> {
     let handle = Secp256k1::new();
 
     let (private_key, public_key) = if let Some(in_path) = opts.r#in {
-        let mut private_key_bytes = fs::read(in_path)?;
+        let mut private_key_bytes = if opts.human_readable {
+            if opts.no_hex_prefix {
+                hex::decode(fs::read(in_path)?)?
+            } else {
+                hex::decode(&fs::read(in_path)?[2..])?
+            }
+        } else {
+            fs::read(in_path)?
+        };
         let private_key_slice: &[u8; 32] =
             match private_key_bytes.as_slice().try_into() {
                 Ok(t) => t,
@@ -59,7 +76,18 @@ fn main() -> eyre::Result<()> {
     };
 
     if let Some(out_path) = opts.out {
-        fs::write(out_path, private_key.secret_bytes())?;
+        if opts.human_readable {
+            if opts.no_hex_prefix {
+                fs::write(out_path, hex::encode(private_key.secret_bytes()))?;
+            } else {
+                fs::write(
+                    out_path,
+                    format!("0x{}", hex::encode(private_key.secret_bytes())),
+                )?;
+            }
+        } else {
+            fs::write(out_path, private_key.secret_bytes())?;
+        }
     }
 
     if !opts.quiet {
