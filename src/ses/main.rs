@@ -7,7 +7,10 @@ use sha3::{Digest, Keccak256};
 use zeroize::Zeroize;
 
 const ETHEREUM_ADDRESS_LEN: usize = 20;
-const PUBLIC_KEY_NUM_BYTES_UNCOMPRESSED: usize = 65;
+
+/// The number of bytes in an uncompressed public key (**ignoring the
+/// leading prefix indicating compression status**)
+const PUBLIC_KEY_NUM_BYTES_UNCOMPRESSED: usize = 64;
 
 /// Generates a SECP-256k1 keypair or displays the Ethereum address associated
 /// with an existing one
@@ -63,7 +66,7 @@ fn main() -> eyre::Result<()> {
         /* We must serialise the uncompressed public key, in accordance with
          * the Yellow Paper.
          * */
-        let public_key_bytes = public_key.serialize_uncompressed();
+        let public_key_bytes = &public_key.serialize_uncompressed()[1..];
         assert!(public_key_bytes.len() == PUBLIC_KEY_NUM_BYTES_UNCOMPRESSED);
 
         if opts.display_public_key {
