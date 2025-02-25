@@ -46,3 +46,41 @@ $ tit -p -r https://rpc.beaverbuild.org 0x02f8b20181948449bdee618501dcd650008301
 https://rpc.beaverbuild.org/ said: {"id":1,"jsonrpc":"2.0","result":"0xed996b9391ba983bad386a33dfc2eb91059c4a322b685246f9937cbbf9d5ad49"}
 ```
 
+#### Enforcing strict validation of the provided RLP bytes ####
+
+Unless `-q` is specified, `tit` will print information about the transaction to standard output upon successful validation:
+
+```
+$ tit -s -r https://rpc.beaverbuild.org 0x02f8b20181948449bdee618501dcd6500083016b93942dabcea55a12d73191aece59f508b191fb68adac80b844095ea7b300000000000000000000000054e44dbb92dba848ace27f44c0cb4268981ef1cc00000000000000000000000000000000000000000000000052616e065f6915ebc080a0c497b6e53d7cb78e68c37f6186c8bb9e1b8a55c3e22462163495979b25c2caafa052769811779f438b73159c4cc6a05a889da8c1a16e432c2e37e3415c9a0b9887
+Eip1559(
+    TxEip1559 {
+        chain_id: 1,
+        nonce: 148,
+        gas_limit: 93075,
+        max_fee_per_gas: 8000000000,
+        max_priority_fee_per_gas: 1237184097,
+        to: Call(
+            0x2dabcea55a12d73191aece59f508b191fb68adac,
+        ),
+        value: 0,
+        access_list: AccessList(
+            [],
+        ),
+        input: 0x095ea7b300000000000000000000000054e44dbb92dba848ace27f44c0cb4268981ef1cc00000000000000000000000000000000000000000000000052616e065f6915eb,
+    },
+)
+https://rpc.beaverbuild.org/ said: {"id":1,"jsonrpc":"2.0","result":"0xed996b9391ba983bad386a33dfc2eb91059c4a322b685246f9937cbbf9d5ad49"}
+```
+
+In the case of invalid bytes, no broadcast occurs and an error is printed:
+
+```
+$ tit -s -r https://rpc.beaverbuild.org 0xcafebeef
+Error: input too short
+
+Location:
+    src/tit/main.rs:35:8
+$ echo $?
+1
+```
+

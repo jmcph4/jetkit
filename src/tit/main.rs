@@ -1,6 +1,8 @@
+use alloy_rlp::Decodable;
 use clap::Parser;
 use futures::{stream, StreamExt};
 use reqwest::{Client, IntoUrl};
+use reth_primitives::TransactionSigned;
 use url::Url;
 
 const NUM_CONCURRENT_REQS: usize = 8;
@@ -28,6 +30,11 @@ where
     Ok(resp.text().await?)
 }
 
+fn validate_tx(data: &str) -> eyre::Result<TransactionSigned> {
+    let buf = hex::decode(&data[2..])?;
+    Ok(TransactionSigned::decode(&mut buf.as_slice())?)
+}
+
 /// Gets transactions onto the Ethereum blockchain
 #[derive(Clone, Debug, Parser)]
 #[clap(about, author, version)]
@@ -53,7 +60,11 @@ async fn main() -> eyre::Result<()> {
     let opts = Opts::parse();
 
     if opts.strict {
-        todo!()
+        let tx = validate_tx(&opts.tx)?;
+
+        if !opts.quiet {
+            println!("{:#?}", &tx.transaction());
+        }
     }
 
     let mut stream = stream::iter(opts.rpcs.iter().map(async |url| {
