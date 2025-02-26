@@ -12,7 +12,10 @@ use clap::Parser;
 use eyre::eyre;
 use k256::ecdsa::SigningKey;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 
+#[serde_as]
+#[serde_with::skip_serializing_none]
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 struct TransactionSpecification {
     pub r#type: Option<u8>,
@@ -124,13 +127,14 @@ struct Opts {
     /// form, do not use 0x-prefixes
     #[clap(long, short = 'b')]
     pub no_hex_prefix: bool,
-    /// Path to private key
-    #[clap(long, short)]
-    pub private_key: PathBuf,
     /// In interactive mode, write the specification file format to standard
     /// output
     #[clap(long, short)]
     pub dump_spec: bool,
+    /// Path to private key
+    #[clap(long, short)]
+    #[arg(required_unless_present = "dump_spec")]
+    pub private_key: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -143,46 +147,52 @@ async fn main() -> eyre::Result<()> {
         serde_json::from_str(&fs::read_to_string(opts.spec.unwrap())?)?
     };
 
-    if opts.interactive && opts.dump_spec {
+    if opts.interactive && opts.dump_spec && !opts.quiet {
         println!("{}", serde_json::to_string(&spec)?);
     }
 
-    if !opts.quiet {
+    /* there's no real point in printing the spec itself if we've just dumped
+     * its JSON */
+    if !opts.quiet && !opts.dump_spec {
         print!("{spec}");
     }
 
-    let private_key_bytes = if opts.human_readable {
-        if opts.no_hex_prefix {
-            hex::decode(fs::read(opts.private_key)?)?
+    if let Some(private_key) = opts.private_key {
+        let private_key_bytes = if opts.human_readable {
+            if opts.no_hex_prefix {
+                hex::decode(fs::read(private_key)?)?
+            } else {
+                hex::decode(&fs::read(private_key)?[2..])?
+            }
         } else {
-            hex::decode(&fs::read(opts.private_key)?[2..])?
-        }
-    } else {
-        fs::read(opts.private_key)?
-    };
-    let private_key_slice: &[u8; 32] = match private_key_bytes
-        .as_slice()
-        .try_into()
-    {
-        Ok(t) => t,
-        Err(e) => {
-            return Err(eyre!("Incorrect data length for private key: {e:?}"))
-        }
-    };
+            fs::read(private_key)?
+        };
+        let private_key_slice: &[u8; 32] =
+            match private_key_bytes.as_slice().try_into() {
+                Ok(t) => t,
+                Err(e) => {
+                    return Err(eyre!(
+                        "Incorrect data length for private key: {e:?}"
+                    ))
+                }
+            };
 
-    let wallet: EthereumWallet =
-        EthereumWallet::new(LocalSigner::from_signing_key(
-            SigningKey::from_slice(private_key_slice)?,
-        ));
+        let wallet: EthereumWallet =
+            EthereumWallet::new(LocalSigner::from_signing_key(
+                SigningKey::from_slice(private_key_slice)?,
+            ));
 
-    println!(
-        "0x{}",
-        hex::encode(alloy_rlp::encode(
-            &<TransactionSpecification as Into<TransactionRequest>>::into(spec)
+        println!(
+            "0x{}",
+            hex::encode(alloy_rlp::encode(
+                &<TransactionSpecification as Into<TransactionRequest>>::into(
+                    spec
+                )
                 .build(&wallet)
                 .await?
-        ))
-    );
+            ))
+        );
+    }
 
     Ok(())
 }
