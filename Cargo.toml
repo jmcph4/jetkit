@@ -18,6 +18,14 @@ zeroize = "1.8.1"
 
 reth-primitives = { git = "https://github.com/paradigmxyz/reth", tag = "v1.2.0" }
 alloy-rlp = "0.3.11"
+alloy-eips = "0.11.1"
+alloy-network = "0.11.1"
+alloy-signer-local = "0.11.1"
+serde = { version = "1.0.218", features = ["derive"] }
+alloy-primitives = "0.8.21"
+serde_json = "1.0.139"
+alloy-rpc-types = "0.11.1"
+k256 = "0.13.4"
 
 [[bin]]
 name = "ses"
@@ -26,3 +34,7 @@ path = "src/ses/main.rs"
 [[bin]]
 name = "tit"
 path = "src/tit/main.rs"
+
+[[bin]]
+name = "stb"
+path = "src/stb/main.rs"
