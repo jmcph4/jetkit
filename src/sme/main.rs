@@ -20,6 +20,9 @@ const CBOR_METADATA_LENGTH_LEN: usize = 2;
 /// perspective, having to specify your own IPFS gateway defeats the point.
 const IPFS_GATEWAY_URL_PREFIX: &str = "https://ipfs.io/ipfs";
 
+/// Number of bytes that denote the version of the Solidity compiler
+const SOLIDITY_VERSION_LEN: usize = 3;
+
 #[serde_as]
 #[skip_serializing_none]
 #[derive(Clone, Debug, Deserialize)]
@@ -79,7 +82,7 @@ impl<'a> TryFrom<CanonicalMetadata<'a>> for Metadata {
 
 #[derive(Copy, Clone, Debug, Deserialize)]
 /// Represents a version of the Solidity reference compiler
-struct SolidityVersion {
+pub struct SolidityVersion {
     pub major: u8,
     pub minor: u8,
     pub patch: u8,
@@ -89,7 +92,15 @@ impl TryFrom<&[u8]> for SolidityVersion {
     type Error = ErrReport;
 
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        todo!()
+        if bytes.len() == SOLIDITY_VERSION_LEN {
+            Ok(Self {
+                major: bytes[0],
+                minor: bytes[1],
+                patch: bytes[2],
+            })
+        } else {
+            Err(eyre!("Incorrect number of bytes for Solidity version"))
+        }
     }
 }
 
@@ -98,7 +109,7 @@ impl TryFrom<&[u8]> for SolidityVersion {
 ///
 /// The idea here is that we want *one* canonical digest despite the
 /// possibility of there being multiple present in the metadata.
-enum Digest {
+pub enum Digest {
     Ipfs(String),
     Swarm(String),
 }
