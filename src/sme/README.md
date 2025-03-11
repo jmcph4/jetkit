@@ -23,7 +23,7 @@ Options:
 #### Retrieve the metadata file for the Ethereum 2.0 deposit contract ####
 
 ```
-$ curl $(cast code --flashbots 0x00000000219ab540356cbb839cbe05303d7705fa | ./sme -g) | jq
+$ curl $(cast code --flashbots 0x00000000219ab540356cbb839cbe05303d7705fa | sme -g) | jq
 {
   "compiler": {
     "version": "0.6.11+commit.5ef660b1"
@@ -235,7 +235,7 @@ $ curl $(cast code --flashbots 0x00000000219ab540356cbb839cbe05303d7705fa | ./sm
 #### Dump the metadata for a given smart contract ####
 
 ```
-$ cast code --flashbots 0x2f55dac1c137f3ee8c8513858f161671ddddf214 | ./sme -m
+$ cast code --flashbots 0x2f55dac1c137f3ee8c8513858f161671ddddf214 | sme -m
 Metadata {
     digest: Some(
         Ipfs(
